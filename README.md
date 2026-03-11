@@ -23,6 +23,31 @@ This application runs on a `SequentialAgent` pipeline consisting of three distin
 2. **The Librarian:** Takes the messy text list, corrects spelling, assigns accurate genres, formats the data into strict JSON, and triggers a tool to save the shelf to a local `.db` file.
 3. **The Matchmaker:** Compares the structured JSON list against the user's selected preferences to generate engaging, custom pitches for the top 3 books they should read next.
 
+## 🚀 Installation & Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/MJ-9669/Bookshelf-Scanner.git](https://github.com/MJ-9669/Bookshelf-Scanner.git)
+   cd Bookshelf-Scanner
+
+2. **Create a virtual environment (Recommended):**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+
+4. **Set up your environment variables:**
+   Create a .env file inside the scanner_agents folder and add your Gemini API key:
+   ```bash
+   GEMINI_API_KEY=your_actual_api_key_here
+
+1. **Run the application:**
+   ```bash
+   streamlit run app.py
+   
 ## 🏗️ System Architecture
 
 The application is built on a sequential multi-agent architecture using Google's Agent Development Kit (ADK). The data flows through a strict pipeline where each agent handles a highly specialized task.
