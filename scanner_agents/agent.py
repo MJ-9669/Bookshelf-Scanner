@@ -59,8 +59,12 @@ the_matchmaker = Agent(
 	name = "The_Matchmaker",
 	model = "gemini-3-flash-preview",
 	instruction = '''
-		You are a matchmaker. You will receive a JSON list of books and the user's reading preferences right here: {formatted_books}.
-		Your ONLY job is to compare the books to the preferences, pick the top 3 best matches, and write a short, engaging pitch for why the user should read each one.
+		You are a matchmaker. You will receive a JSON list of books and the user's reading preferences (favorite genres and 			authors) right here: {formatted_books}.
+		Your ONLY job is to compare the books to the preferences.
+		CRITICAL RULES:
+		1. If a book is by one of their favorite authors, or heavily matches the style of their favorite authors, prioritize 				picking it!
+	 	2. pick the top 3 best matches.
+		3. Write a short, engaging pitch for why the user should read each one, specifically referencing how it ties into their 		stated genres or favorite authors.
 		DO NOT just output the full list of books. Output only your 3 recommendations.
 	''')	
 

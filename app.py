@@ -50,6 +50,8 @@ all_genres = ["Fiction", "Non-Fiction", "Sci-Fi", "Fantasy", "Mystery", "Thrille
 
 user_pref = st.multiselect("Choose genre:", all_genres)
 
+fav_authors = st.text_input("Who are your favorite authors ? (Seperated by commas)")
+
 st.write("")
 
 st.write("Upload a photo of books.")
@@ -89,8 +91,9 @@ if st.button("Start Scanning"):
 			)
 
 
+			author_text = f"My favorite authors are {fav_authors}." if fav_authors else ""
+			user_prompt = f"Here is my bookshelf. My favorite genres are: {', '.join(user_pref)}.{author_text}"
 
-			user_prompt = f"Here is my bookshelf. My reading preferences are: {', '.join(user_pref)}"
 			message = types.Content(
 				role="user",
 				parts=[
