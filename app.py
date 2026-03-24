@@ -13,119 +13,159 @@ import asyncio
 import os
 from dotenv import load_dotenv
 
+import sqlite3
+import pandas as pd
+
+import plotly.express as px
+
+st.set_page_config(layout="wide", page_title="Bookshelf Scanner")
+
 # Tell Python exactly where the .env file lives
 load_dotenv("scanner_agents/.env")
 
 st.title("AI Bookshelf Scanner and Book Recommender")
-st.markdown("Find the perfect book from you.")
+st.markdown("Find the perfect book for you.")
 st.write("")
 
-st.markdown("Taking a photo of an entire bookshelf at stores, the library, or a friend's house, and we'll help you figure out which ones you'll like!")
+tab1, tab2 = st.tabs(["Scanner", "My Library Stats"])
 
-st.write("")
+connection = sqlite3.connect("shelf.db")
+cursor = connection.cursor()
+cursor.execute('''CREATE TABLE IF NOT EXISTS books(
+            Title TEXT, Author TEXT, Genre TEXT)''')
+connection.commit()
 
-# if st.button("Start Scanning", type = "primary"):
-	
+with tab1:
 
-st.write("")
+    st.markdown("Taking a photo of an entire bookshelf at stores, the library, or a friend's house, and we'll help you figure out which ones you'll like!")
 
-st.subheader("How It Works")
-c1,c2,c3 = st.columns(3)
-with c1:
-	st.markdown("#### 1. Set Preferences")
-	st.caption("Tell us about your reading interests and favorite author")
-with c2:
-	st.markdown("#### 2. Upload Photo")
-	st.caption("Take a photo of bookshelf and our AI will Identify each book")
-with c3:
-	st.markdown("#### 3. Find Matches")
-	st.caption("We highlight books that match your taste")
+    st.write("")
 
+    # if st.button("Start Scanning", type = "primary"):
+        
 
-st.markdown("#### Tell us about your reading preferences")
+    st.write("")
 
-st.write("Select genres and authors that interest you to help us provide better recommendations.")
-
-all_genres = ["Fiction", "Non-Fiction", "Sci-Fi", "Fantasy", "Mystery", "Thriller", "Romance", "Biography", "History", "Self-	Help", "Business", "Comics", "Classics", "Young Adult", "Horror","Role-playing Game"]
-
-user_pref = st.multiselect("Choose genre:", all_genres)
-
-fav_authors = st.text_input("Who are your favorite authors ? (Seperated by commas)")
-
-st.write("")
-
-st.write("Upload a photo of books.")
-
-input_options = st.radio("Choose input method:",["Browse files", "Camera" ])
-
-if input_options == "Camera":
-	uploaded_file = st.camera_input("Take picture of your bookshlef")
-else:
-	uploaded_file = st.file_uploader("Upload an image", type = ["jpeg", "jpg", "png"])
-
-if uploaded_file:
-	st.image(uploaded_file)
-
-if st.button("Start Scanning"):
-	if uploaded_file is not None:
-		with st.spinner("Analyzing and Cross-Referencing the Preferences..."):
-			img = Image.open(uploaded_file)
-
-			buf = io.BytesIO()
-			img.convert('RGB').save(buf, format="JPEG")
-			image_bytes = buf.getvalue()
-
-			session_service = InMemorySessionService()
-
-			asyncio.run(session_service.create_session(
-				app_name="Shelf_Scanner_app", 
-				user_id="demo_user", 
-				session_id="session_001"
-				))
+    st.subheader("How It Works")
+    c1,c2,c3 = st.columns(3)
+    with c1:
+        st.markdown("#### 1. Set Preferences")
+        st.caption("Tell us about your reading interests and favorite author")
+    with c2:
+        st.markdown("#### 2. Upload Photo")
+        st.caption("Take a photo of bookshelf and our AI will Identify each book")
+    with c3:
+        st.markdown("#### 3. Find Matches")
+        st.caption("We highlight books that match your taste")
 
 
-			runner = Runner(
-				agent=shelf_scanner_pipeline,
-				app_name="Shelf_Scanner_app",
-				session_service=session_service
-			)
+    st.markdown("#### Tell us about your reading preferences")
+
+    st.write("Select genres and authors that interest you to help us provide better recommendations.")
+
+    all_genres = ["Fiction", "Non-Fiction", "Sci-Fi", "Fantasy", "Mystery", "Thriller", "Romance", "Biography", "History", "Self-Help", "Business", "Comics", "Classics", "Young Adult", "Horror","Role-playing Game"]
+
+    user_pref = st.multiselect("Choose genre:", all_genres)
+
+    fav_authors = st.text_input("Who are your favorite authors ? (Seperated by commas)")
+
+    st.write("")
+
+    st.write("Upload a photo of books.")
+
+    input_options = st.radio("Choose input method:",["Browse files", "Camera" ])
+
+    if input_options == "Camera":
+        uploaded_file = st.camera_input("Take picture of your bookshlef")
+    else:
+        uploaded_file = st.file_uploader("Upload an image", type = ["jpeg", "jpg", "png"])
+
+    if uploaded_file:
+        st.image(uploaded_file)
+
+    if st.button("Start Scanning"):
+        if uploaded_file is not None:
+            with st.spinner("Analyzing and Cross-Referencing the Preferences..."):
+                img = Image.open(uploaded_file)
+
+                buf = io.BytesIO()
+                img.convert('RGB').save(buf, format="JPEG")
+                image_bytes = buf.getvalue()
+
+                session_service = InMemorySessionService()
+
+                asyncio.run(session_service.create_session(
+                    app_name="Shelf_Scanner_app", 
+                    user_id="demo_user", 
+                    session_id="session_001"
+                    ))
 
 
-			author_text = f"My favorite authors are {fav_authors}." if fav_authors else ""
-			user_prompt = f"Here is my bookshelf. My favorite genres are: {', '.join(user_pref)}.{author_text}"
+                runner = Runner(
+                    agent=shelf_scanner_pipeline,
+                    app_name="Shelf_Scanner_app",
+                    session_service=session_service
+                )
 
-			message = types.Content(
-				role="user",
-				parts=[
-					types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
-					types.Part.from_text(text=user_prompt)
-				]
-			)
 
-			try:
-				events = runner.run(
-					user_id = "demo_user",
-					session_id = "session_001",
-					new_message=message
-				)
+                author_text = f"My favorite authors are {fav_authors}." if fav_authors else ""
+                user_prompt = f"Here is my bookshelf. My favorite genres are: {', '.join(user_pref)}.{author_text}"
 
-				final_result = ""
-				for event in events:
-					# Check if it's the final response
-					if event.is_final_response():
-						# Safely ensure the text actually exists before grabbing it
-						if event.content and event.content.parts:
-							final_result = event.content.parts[0].text
+                message = types.Content(
+                    role="user",
+                    parts=[
+                        types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
+                        types.Part.from_text(text=user_prompt)
+                    ]
+                )
 
-				st.success("Analysis Complete!")
-				
-				if final_result == "":
-					st.warning("The AI ran, but returned empty text! We need to link the pipeline memory.")
-				else:
-					st.markdown(final_result)
+                try:
+                    events = runner.run(
+                        user_id = "demo_user",
+                        session_id = "session_001",
+                        new_message=message
+                    )
 
-			except Exception as e:
-				st.error(f"Pipeline crashed internally: {e}")
+                    final_result = ""
+                    for event in events:
+                        # Check if it's the final response
+                        if event.is_final_response():
+                            # Safely ensure the text actually exists before grabbing it
+                            if event.content and event.content.parts:
+                                final_result = event.content.parts[0].text
 
-	else:
-		st.warning("Please upload or take a photo of a bookshelf first!")
+                    st.success("Analysis Complete!")
+                    
+                    if final_result == "":
+                        st.warning("The AI ran, but returned empty text! We need to link the pipeline memory.")
+                    else:
+                        st.markdown(final_result)
+
+                except Exception as e:
+                    st.error(f"Pipeline crashed internally: {e}")
+
+        else:
+            st.warning("Please upload or take a photo of a bookshelf first!")
+            
+#@st.cache_data
+def data_extracter():
+    connection = sqlite3.connect("shelf.db")
+    data_f = pd.read_sql(''' SELECT Title, Author, Genre FROM books''', connection)
+    return data_f
+
+with tab2:    
+    df = data_extracter()
+    val = df["Genre"].value_counts()
+    ch = px.bar(val)
+    st.plotly_chart(ch)
+    
+    if st.button("Reset Entire Library"):
+        conn = sqlite3.connect("shelf.db")
+        cursor = conn.cursor()
+        cursor.execute('''DELETE FROM books''')
+        conn.commit()
+        conn.close()
+        st.rerun()
+        
+    st.subheader("Scan History")
+    st.dataframe(df, hide_index = True)

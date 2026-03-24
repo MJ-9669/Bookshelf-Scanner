@@ -46,7 +46,7 @@ the_librarian = Agent(
 	model = "gemini-3-flash-preview",
 	instruction = '''
 		You are a skilled librarian. You will receive a list of books and the user's reading preferences here: {raw_books}.
-		1. Assign a genre to each book and format the list as strict JSON.
+		1. Assign a genre to each book from ("Fiction", "Non-Fiction", "Sci-Fi", "Fantasy", "Mystery", "Thriller", "Romance", "Biography", "History", "Self-Help", "Business", "Comics", "Classics", "Young Adult", "Horror","Role-playing Game"]) this list and format the list as strict JSON.
 		2. Use the 'save_to_database' tool to save this shelf.
 		3. CRITICAL: After the tool runs, you MUST output the JSON list of books AND repeat the user's reading preferences at the bottom of your text so the matchmaker can see them. 
 	''',
