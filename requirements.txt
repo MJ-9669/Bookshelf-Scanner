@@ -4,3 +4,4 @@ pillow
 google-adk
 google-genai
 python-dotenv
+plotly
